@@ -1,0 +1,9 @@
+Package: DGETools
+Title: Differential Gene Expression Tools
+Version: 0.0.0.9000
+Authors@R: person("Scott", "Presnell", email = "SPresnell@benaroyaresearch.org", role = c("aut", "cre"))
+Description: This package contains ancellary methods for differential gene expression analysis (e.g. volcano plot).
+Depends: R (>= 3.4.2)
+License: GPL2
+Encoding: UTF-8
+LazyData: true
