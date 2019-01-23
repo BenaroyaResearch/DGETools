@@ -3,6 +3,7 @@
 # Scott Presnell, SPresnell@benaroyaresearch.org
 # Started spring 2018, Formalized July 13th, 2018
 #
+if(getRversion() >= "3.1.0") utils::globalVariables(c("logFC", "lop"))
 # Create a Volcano Plot
 # run theme_set(theme_bw() + theme(text = element_text(face=fontFace, size=14), plot.title = element_text(face=fontFace, hjust = 0.5)))
 # as part of your setup and repel font face will take from the current theme fontface
@@ -11,33 +12,47 @@
 #'
 #' Make a volcano plot, using cuts, ggrepel, optionally write out as image, optionally write out DEG list and all gene list to .csv
 #'
-#' @param fit fit ebays based fit after processing with limma
-#' @param target string Name of the constrast target to plot
-#' @param title string Title for the plot
-#' @param numLabels integer Number of gene labels to show on the plot
-#' @param write boolean Write DEG list (using contrast target string)
-#' @param saveImage boolean Write out an image
-#' @param ext string Image type/extension
-#' @param labelSource string Name of the column for gene names
-#' @param repelSize integer Size of labels
-#' @param pointSize integet Size of points
+#' @param fit An MArrayLM fitted linear model object
+#' @param target Name of the constrast target to plot (string)
+#' @param title Title for the plot (string)
+#' @param numLabels Number of gene labels to show on the plot (integer)
+#' @param writeTopTable Write DEG list (using contrast target string, boolean)
+#' @param write deprecated in favor of \code{witeTopTable}
+#' @param saveImage Write out an image (boolean)
+#' @param extImage Image type/extension (string)
+#' @param ext deprecated in favor of \code{extImage}
+#' @param cutFC Fold Change cutoff for significance (floating point)
+#' @param cutPvalue p-valut cutoff for significance (floating point)
+#' @param xlim Limits on x-axis (e.g. xlim(-5, 5))
+#' @param labelSource Name of the column for gene names (string)
+#' @param repelFontFace Name of fontface for labels (string)
+#' @param repelSize Size of labels (integer)
+#' @param pointSize Size of points (integer)
 #'
-#' @return dataFrame Data Frame of differentially expressed gene information, in the form of topTable().
+#' @return A dataframe of differentially expressed gene information, in the form of topTable().
+#'
+#' @author Scott R Presnell, \email{SPresnell@@benaroyaresearch.org}
+#' @seealso Associated or similar limma functions \code{\link[limma]{topTable}},  \code{\link[limma]{volcanoplot}}
 #'
 #' @examples
+#' \donttest{
 #' Volcano(fit, "SPvsDP", "Single Positive vs Double Positive")
+#'}
 #'
 #'
 #' @export
-#' @import limma gglot2 ggrepel
+#' @import limma ggplot2 ggrepel
+#' @importFrom utils write.csv
 #'
 Volcano <- function(fit,
                     target,
                     title,
                     numLabels=50,
-                    write=FALSE,
+                    write,
+                    writeTopTable=FALSE,
                     saveImage=FALSE,
-                    ext="png",
+                    ext,
+                    extImage="png",
                     cutFC = 1.5,
                     cutPvalue = 0.05,
                     xlim=NULL,
@@ -47,21 +62,31 @@ Volcano <- function(fit,
                     pointSize=3) {
 
 
+    if (!missing(write)) {
+      warning("argument 'write' is depreicated, please use writeList instead.", call. = FALSE)
+      writeTopTable <- write
+    }
+
+    if (!missing(ext)) {
+      warning("argument 'ext' is depreicated, please use extImage instead.", call. = FALSE)
+      extImage <- ext
+    }
+
   # get the differentially expressed genes (actually get all genes, but sort them by p.value)
-  tt <- topTable(fit, coef=target, sort.by="P", num=Inf)
+  tt <- topTable(fit, coef=target, sort.by="P", number=Inf)
 
   # Old way, use if gene list not provided to DEGList()
   #ttAnnot <- cbind("hgnc_symbol" = gene_key$hgnc_symbol[match(rownames(tt), gene_key$ensembl_gene_id)], tt)
 
   ttAnnot <- tt
-  ttAnnot$lop = -log10(ttAnnot$adj.P.Val) # easier to keep in the dataframe
+  ttAnnot$lop <- -log10(ttAnnot$adj.P.Val) # easier to keep in the dataframe
   ttAnnot$expr <- ifelse(ttAnnot$logFC >= log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "up",
                          ifelse(ttAnnot$logFC < -log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "down", "non"))
 
   # Only the differentially expressed ones for labeling, and possibly writing out.
   deg <- subset(ttAnnot, expr != "non")
 
-  p <- ggplot(ttAnnot, aes(logFC, lop)) +
+  p <- ggplot(data=ttAnnot, aes(x=logFC, y=lop)) +
     geom_point(aes(color = expr), size=pointSize) +
     scale_colour_manual(name="Expression",
                         breaks = c("up", "down", "non"),
@@ -73,9 +98,9 @@ Volcano <- function(fit,
   }
 
   if (nrow(deg) > numLabels) {
-    p <- p + geom_text_repel(data=deg[1:numLabels,], aes(logFC, lop, fontface=repelFontFace, label=deg[1:numLabels, labelSource]), size=repelSize)
+    p <- p + geom_text_repel(data=deg[1:numLabels,], aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[1:numLabels, labelSource]), size=repelSize)
   } else if (nrow(deg) > 0) {
-    p <- p + geom_text_repel(data=deg, aes(logFC, lop, fontface=repelFontFace, label=deg[, labelSource]), size=repelSize)
+    p <- p + geom_text_repel(data=deg, aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[, labelSource]), size=repelSize)
   }
 
   p <- p +
@@ -91,10 +116,9 @@ Volcano <- function(fit,
 
   if (saveImage == TRUE) {
     if (ext == "svg") {
-      require(svglite)
     }
     # ggsave grabs the last plot if not specified
-    ggsave(file=paste(target, ext, sep="."), width=8, height=10)
+    ggsave(filename=paste(target, ext, sep="."), width=8, height=10)
   }
 
   # pepare to write and/or return.

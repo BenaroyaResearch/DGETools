@@ -4,41 +4,61 @@
 \alias{Volcano}
 \title{Create a Volcano plot}
 \usage{
-Volcano(fit, target, title, numLabels = 50, write = FALSE,
-  saveImage = FALSE, ext = "png", cutFC = 1.5, cutPvalue = 0.05,
-  xlim = NULL, labelSource = "hgnc_symbol",
-  repelFontFace = theme_get()$text$face, repelSize = 4,
-  pointSize = 3)
+Volcano(fit, target, title, numLabels = 50, write,
+  writeTopTable = FALSE, saveImage = FALSE, ext, extImage = "png",
+  cutFC = 1.5, cutPvalue = 0.05, xlim = NULL,
+  labelSource = "hgnc_symbol", repelFontFace = theme_get()$text$face,
+  repelSize = 4, pointSize = 3)
 }
 \arguments{
-\item{fit}{fit ebays based fit after processing with limma}
+\item{fit}{An MArrayLM fitted linear model object}
 
-\item{target}{string Name of the constrast target to plot}
+\item{target}{Name of the constrast target to plot (string)}
 
-\item{title}{string Title for the plot}
+\item{title}{Title for the plot (string)}
 
-\item{numLabels}{integer Number of gene labels to show on the plot}
+\item{numLabels}{Number of gene labels to show on the plot (integer)}
 
-\item{write}{boolean Write DEG list (using contrast target string)}
+\item{write}{deprecated in favor of \code{witeTopTable}}
 
-\item{saveImage}{boolean Write out an image}
+\item{writeTopTable}{Write DEG list (using contrast target string, boolean)}
 
-\item{ext}{string Image type/extension}
+\item{saveImage}{Write out an image (boolean)}
 
-\item{labelSource}{string Name of the column for gene names}
+\item{ext}{deprecated in favor of \code{extImage}}
 
-\item{repelSize}{integer Size of labels}
+\item{extImage}{Image type/extension (string)}
 
-\item{pointSize}{integet Size of points}
+\item{cutFC}{Fold Change cutoff for significance (floating point)}
+
+\item{cutPvalue}{p-valut cutoff for significance (floating point)}
+
+\item{xlim}{Limits on x-axis (e.g. xlim(-5, 5))}
+
+\item{labelSource}{Name of the column for gene names (string)}
+
+\item{repelFontFace}{Name of fontface for labels (string)}
+
+\item{repelSize}{Size of labels (integer)}
+
+\item{pointSize}{Size of points (integer)}
 }
 \value{
-dataFrame Data Frame of differentially expressed gene information, in the form of topTable().
+A dataframe of differentially expressed gene information, in the form of topTable().
 }
 \description{
 Make a volcano plot, using cuts, ggrepel, optionally write out as image, optionally write out DEG list and all gene list to .csv
 }
 \examples{
+\donttest{
 Volcano(fit, "SPvsDP", "Single Positive vs Double Positive")
+}
 
 
+}
+\seealso{
+Associated or similar limma functions \code{\link[limma]{topTable}},  \code{\link[limma]{volcanoplot}}
+}
+\author{
+Scott R Presnell, \email{SPresnell@benaroyaresearch.org}
 }
