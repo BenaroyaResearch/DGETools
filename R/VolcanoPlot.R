@@ -24,7 +24,11 @@ if(getRversion() >= "3.1.0") utils::globalVariables(c("logFC", "lop"))
 #' @param cutFC Fold Change cutoff for significance (floating point)
 #' @param cutPvalue p-valut cutoff for significance (floating point)
 #' @param xlim Limits on x-axis (e.g. xlim(-5, 5))
+#' @param labelList List of label names to render, only those (list)
 #' @param labelSource Name of the column for gene names (string)
+#' @param downColor Name of down/left point color (string)
+#' @param nonColor Name of non-sigfificant color (string)
+#' @param upColor name of up/right point color (string)
 #' @param repelFontFace Name of fontface for labels (string)
 #' @param repelSize Size of labels (integer)
 #' @param pointSize Size of points (integer)
@@ -48,27 +52,31 @@ Volcano <- function(fit,
                     target,
                     title,
                     numLabels=50,
-                    write,
+                    write=FALSE,
                     writeTopTable=FALSE,
                     saveImage=FALSE,
-                    ext,
+                    ext="png",
                     extImage="png",
                     cutFC = 1.5,
                     cutPvalue = 0.05,
                     xlim=NULL,
+                    labelList=NULL,
                     labelSource="hgnc_symbol",  # mgi_symbol for mouse
+                    downColor="blue",
+                    nonColor="grey",
+                    upColor="red",
                     repelFontFace = theme_get()$text$face,  # get the fontFace from the current theme by default.
                     repelSize=4,
                     pointSize=3) {
 
 
     if (!missing(write)) {
-      warning("argument 'write' is depreicated, please use writeList instead.", call. = FALSE)
+      warning("argument 'write' is deprecated, please use writeList instead.", call. = FALSE)
       writeTopTable <- write
     }
 
     if (!missing(ext)) {
-      warning("argument 'ext' is depreicated, please use extImage instead.", call. = FALSE)
+      warning("argument 'ext' is deprecated, please use extImage instead.", call. = FALSE)
       extImage <- ext
     }
 
@@ -82,6 +90,14 @@ Volcano <- function(fit,
   ttAnnot$lop <- -log10(ttAnnot$adj.P.Val) # easier to keep in the dataframe
   ttAnnot$expr <- ifelse(ttAnnot$logFC >= log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "up",
                          ifelse(ttAnnot$logFC < -log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "down", "non"))
+  ttAnnot$labels <- as.character(ttAnnot[[labelSource]])
+
+  if (!is.null(labelList)) {
+    newLabels <- rep("", length(ttAnnot$labels))
+    indices <-  which(ttAnnot$labels %in% labelList)
+    newLabels[indices] <- ttAnnot$labels[indices]
+    ttAnnot$labels <- newLabels
+  }
 
   # Only the differentially expressed ones for labeling, and possibly writing out.
   deg <- subset(ttAnnot, expr != "non")
@@ -91,16 +107,18 @@ Volcano <- function(fit,
     scale_colour_manual(name="Expression",
                         breaks = c("up", "down", "non"),
                         label  = c("Up regulated", "Down regulated", "Not significant"),
-                        values = c("up"="red", "down"="blue", "non"="grey"))
+                        values = c("up"=upColor, "down"=downColor, "non"=nonColor))
   # Add an xlimit via xlim=xlim(-5,5), on the Volcano call.
   if (!is.null(xlim)) {
     p <- p + xlim
   }
 
-  if (nrow(deg) > numLabels) {
-    p <- p + geom_text_repel(data=deg[1:numLabels,], aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[1:numLabels, labelSource]), size=repelSize)
+  if (!is.null(labelList)) {
+    p <- p + geom_text_repel(data=ttAnnot, aes(x=logFC, y=lop, fontface=repelFontFace, label=labels), size=repelSize)
+  } else if (nrow(deg) > numLabels) {
+    p <- p + geom_text_repel(data=deg[1:numLabels,], aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[1:numLabels, "labels"]), size=repelSize)
   } else if (nrow(deg) > 0) {
-    p <- p + geom_text_repel(data=deg, aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[, labelSource]), size=repelSize)
+    p <- p + geom_text_repel(data=deg, aes(x=logFC, y=lop, fontface=repelFontFace, label=labels), size=repelSize)
   }
 
   p <- p +
@@ -115,16 +133,17 @@ Volcano <- function(fit,
   print(p)
 
   if (saveImage == TRUE) {
-    if (ext == "svg") {
-    }
+#    if (extImage == "svg") {
+#    }
     # ggsave grabs the last plot if not specified
-    ggsave(filename=paste(target, ext, sep="."), width=8, height=10)
+    ggsave(filename=paste(target, extImage, sep="."), width=8, height=10, dpi=320)
   }
 
   # pepare to write and/or return.
   if (nrow(deg) > 0) {
     deg$lop <- NULL
     deg$B <- NULL
+    deg$labels <- NULL
   }
   #if (write == TRUE && nrow(deg) > 0) {
     # Row.names should be false if the Ensembl IDs are already added as a column possibly using DEGList(gene=) argument)
@@ -133,6 +152,7 @@ Volcano <- function(fit,
   if (write == TRUE) {
     ttAnnot$lop <- NULL
     ttAnnot$B <- NULL
+    ttAnnot$labels <- NULL
     write.csv(ttAnnot, paste(target, "all.csv", sep="_"), quote=F)
   }
 

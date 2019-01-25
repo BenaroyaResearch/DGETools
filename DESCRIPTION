@@ -1,6 +1,6 @@
 Package: DGETools
 Title: Differential Gene Expression Tools
-Version: 0.0.1
+Version: 0.0.2
 Date: 2019-01-22
 Author: Scott R Presnell <SPresnell@benaroyaresearch.org>
 Maintainer: Scott R Presnell <SPresnell@benaroyaresearch.org>

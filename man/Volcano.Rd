@@ -6,8 +6,9 @@
 \usage{
 Volcano(fit, target, title, numLabels = 50, write,
   writeTopTable = FALSE, saveImage = FALSE, ext, extImage = "png",
-  cutFC = 1.5, cutPvalue = 0.05, xlim = NULL,
-  labelSource = "hgnc_symbol", repelFontFace = theme_get()$text$face,
+  cutFC = 1.5, cutPvalue = 0.05, xlim = NULL, labelList = NULL,
+  labelSource = "hgnc_symbol", downColor = "blue", nonColor = "grey",
+  upColor = "red", repelFontFace = theme_get()$text$face,
   repelSize = 4, pointSize = 3)
 }
 \arguments{
@@ -35,7 +36,15 @@ Volcano(fit, target, title, numLabels = 50, write,
 
 \item{xlim}{Limits on x-axis (e.g. xlim(-5, 5))}
 
+\item{labelList}{List of label names to render, only those (list)}
+
 \item{labelSource}{Name of the column for gene names (string)}
+
+\item{downColor}{Name of down/left point color (string)}
+
+\item{nonColor}{Name of non-sigfificant color (string)}
+
+\item{upColor}{name of up/right point color (string)}
 
 \item{repelFontFace}{Name of fontface for labels (string)}
 
