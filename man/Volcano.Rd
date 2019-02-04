@@ -4,25 +4,26 @@
 \alias{Volcano}
 \title{Create a Volcano plot}
 \usage{
-Volcano(fit, target, title, numLabels = 50, write,
-  writeTopTable = FALSE, saveImage = FALSE, ext, extImage = "png",
-  cutFC = 1.5, cutPvalue = 0.05, xlim = NULL, labelList = NULL,
-  labelSource = "hgnc_symbol", downColor = "blue", nonColor = "grey",
-  upColor = "red", repelFontFace = theme_get()$text$face,
-  repelSize = 4, pointSize = 3)
+Volcano(fit, target, title, numLabels = 50, write = FALSE,
+  writeTopTable = FALSE, saveImage = FALSE, ext = "png",
+  extImage = "png", cutFC = 1.5, cutPvalue = 0.05,
+  labelList = NULL, labelSize = 4, labelSource = "hgnc_symbol",
+  colors = c("red", "blue", "grey"),
+  repelFontFace = theme_get()$text$face, repelSize = 4,
+  pointSize = 3, ...)
 }
 \arguments{
-\item{fit}{An MArrayLM fitted linear model object}
+\item{fit}{A fitted linear model object (MArrayLM)}
 
 \item{target}{Name of the constrast target to plot (string)}
 
 \item{title}{Title for the plot (string)}
 
-\item{numLabels}{Number of gene labels to show on the plot (integer)}
+\item{numLabels}{Number of labels to print (integer)}
 
 \item{write}{deprecated in favor of \code{witeTopTable}}
 
-\item{writeTopTable}{Write DEG list (using contrast target string, boolean)}
+\item{writeTopTable}{Write gene list to CSV file (see \code{target} string, boolean)}
 
 \item{saveImage}{Write out an image (boolean)}
 
@@ -34,23 +35,21 @@ Volcano(fit, target, title, numLabels = 50, write,
 
 \item{cutPvalue}{p-valut cutoff for significance (floating point)}
 
-\item{xlim}{Limits on x-axis (e.g. xlim(-5, 5))}
+\item{labelList}{List of label names to render, only those (vector)}
 
-\item{labelList}{List of label names to render, only those (list)}
+\item{labelSize}{Size of text in repel for labels from labelList - default is the same as the repelSize (integer)}
 
 \item{labelSource}{Name of the column for gene names (string)}
 
-\item{downColor}{Name of down/left point color (string)}
-
-\item{nonColor}{Name of non-sigfificant color (string)}
-
-\item{upColor}{name of up/right point color (string)}
+\item{colors}{vector of up/right point color, down/left point color, and not significant color (string)}
 
 \item{repelFontFace}{Name of fontface for labels (string)}
 
-\item{repelSize}{Size of labels (integer)}
+\item{repelSize}{Size of text repel labels (integer)}
 
-\item{pointSize}{Size of points (integer)}
+\item{pointSize}{Size of geom_points (integer)}
+
+\item{...}{Additional function calls from the ggplot2 package to be added to ggplot, such as \code{xlim=xlim(-5,5)}, \code{ylim=ylim(0,9)}}
 }
 \value{
 A dataframe of differentially expressed gene information, in the form of topTable().

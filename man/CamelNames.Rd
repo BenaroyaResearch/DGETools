@@ -7,7 +7,7 @@
 CamelNames(names)
 }
 \arguments{
-\item{names}{list of names as from dataframe columns.}
+\item{names}{list of names as from dataframe colnames().}
 }
 \value{
 A list of names converted to camel case

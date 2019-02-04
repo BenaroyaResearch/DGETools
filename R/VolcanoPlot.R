@@ -3,7 +3,8 @@
 # Scott Presnell, SPresnell@benaroyaresearch.org
 # Started spring 2018, Formalized July 13th, 2018
 #
-if(getRversion() >= "3.1.0") utils::globalVariables(c("logFC", "lop"))
+#
+#if(getRversion() >= "3.1.0") utils::globalVariables(c("expr", logFC", "lop"))
 # Create a Volcano Plot
 # run theme_set(theme_bw() + theme(text = element_text(face=fontFace, size=14), plot.title = element_text(face=fontFace, hjust = 0.5)))
 # as part of your setup and repel font face will take from the current theme fontface
@@ -12,26 +13,25 @@ if(getRversion() >= "3.1.0") utils::globalVariables(c("logFC", "lop"))
 #'
 #' Make a volcano plot, using cuts, ggrepel, optionally write out as image, optionally write out DEG list and all gene list to .csv
 #'
-#' @param fit An MArrayLM fitted linear model object
+#' @param fit A fitted linear model object (MArrayLM)
 #' @param target Name of the constrast target to plot (string)
 #' @param title Title for the plot (string)
-#' @param numLabels Number of gene labels to show on the plot (integer)
-#' @param writeTopTable Write DEG list (using contrast target string, boolean)
+#' @param writeTopTable Write gene list to CSV file (see \code{target} string, boolean)
 #' @param write deprecated in favor of \code{witeTopTable}
 #' @param saveImage Write out an image (boolean)
 #' @param extImage Image type/extension (string)
 #' @param ext deprecated in favor of \code{extImage}
 #' @param cutFC Fold Change cutoff for significance (floating point)
 #' @param cutPvalue p-valut cutoff for significance (floating point)
-#' @param xlim Limits on x-axis (e.g. xlim(-5, 5))
-#' @param labelList List of label names to render, only those (list)
+#' @param numLabels  Number of labels to print (integer)
+#' @param labelList List of label names to render, only those (vector)
+#' @param labelSize Size of text in repel for labels from labelList - default is the same as the repelSize (integer)
 #' @param labelSource Name of the column for gene names (string)
-#' @param downColor Name of down/left point color (string)
-#' @param nonColor Name of non-sigfificant color (string)
-#' @param upColor name of up/right point color (string)
+#' @param colors vector of up/right point color, down/left point color, and not significant color (string)
 #' @param repelFontFace Name of fontface for labels (string)
-#' @param repelSize Size of labels (integer)
-#' @param pointSize Size of points (integer)
+#' @param repelSize Size of text repel labels (integer)
+#' @param pointSize Size of geom_points (integer)
+#' @param ...  Additional function calls from the ggplot2 package to be added to ggplot, such as \code{xlim=xlim(-5,5)}, \code{ylim=ylim(0,9)}
 #'
 #' @return A dataframe of differentially expressed gene information, in the form of topTable().
 #'
@@ -59,78 +59,105 @@ Volcano <- function(fit,
                     extImage="png",
                     cutFC = 1.5,
                     cutPvalue = 0.05,
-                    xlim=NULL,
                     labelList=NULL,
+                    labelSize = 4,
                     labelSource="hgnc_symbol",  # mgi_symbol for mouse
-                    downColor="blue",
-                    nonColor="grey",
-                    upColor="red",
+                    colors=c("red", "blue", "grey"), # right, left, not significant
                     repelFontFace = theme_get()$text$face,  # get the fontFace from the current theme by default.
                     repelSize=4,
-                    pointSize=3) {
+                    pointSize=3,
+                    ...) {
 
 
-    if (!missing(write)) {
-      warning("argument 'write' is deprecated, please use writeList instead.", call. = FALSE)
-      writeTopTable <- write
-    }
-
-    if (!missing(ext)) {
-      warning("argument 'ext' is deprecated, please use extImage instead.", call. = FALSE)
-      extImage <- ext
-    }
-
-  # get the differentially expressed genes (actually get all genes, but sort them by p.value)
-  tt <- topTable(fit, coef=target, sort.by="P", number=Inf)
-
-  # Old way, use if gene list not provided to DEGList()
-  #ttAnnot <- cbind("hgnc_symbol" = gene_key$hgnc_symbol[match(rownames(tt), gene_key$ensembl_gene_id)], tt)
-
-  ttAnnot <- tt
-  ttAnnot$lop <- -log10(ttAnnot$adj.P.Val) # easier to keep in the dataframe
-  ttAnnot$expr <- ifelse(ttAnnot$logFC >= log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "up",
-                         ifelse(ttAnnot$logFC < -log2(cutFC) & ttAnnot$adj.P.Val < cutPvalue, "down", "non"))
-  ttAnnot$labels <- as.character(ttAnnot[[labelSource]])
-
-  if (!is.null(labelList)) {
-    newLabels <- rep("", length(ttAnnot$labels))
-    indices <-  which(ttAnnot$labels %in% labelList)
-    newLabels[indices] <- ttAnnot$labels[indices]
-    ttAnnot$labels <- newLabels
+  if (!missing(write)) {
+    warning("argument 'write' is deprecated, please use writeTopTable instead.", call. = FALSE)
+    writeTopTable <- write
   }
 
-  # Only the differentially expressed ones for labeling, and possibly writing out.
-  deg <- subset(ttAnnot, expr != "non")
+  if (!missing(ext)) {
+    warning("argument 'ext' is deprecated, please use extImage instead.", call. = FALSE)
+    extImage <- ext
+  }
 
-  p <- ggplot(data=ttAnnot, aes(x=logFC, y=lop)) +
-    geom_point(aes(color = expr), size=pointSize) +
+  # copy of the repelSize to the labelSize if labelSize is not set.
+  if (missing(labelSize)) {
+    labelSize <- repelSize
+  }
+
+  # get all genes, sorted by p.value
+  topResults <- topTable(fit, coef=target, sort.by="P", number=Inf)
+  topResults$lop <- -log10(topResults$adj.P.Val) # easier to keep in the dataframe
+  topResults$expr <- ifelse(topResults$logFC >= log2(cutFC) & topResults$adj.P.Val < cutPvalue, "up",
+                         ifelse(topResults$logFC < -log2(cutFC) & topResults$adj.P.Val < cutPvalue, "down", "non"))
+  topResults$labels <- as.character(topResults[[labelSource]])
+
+  # Old way uses global variable,  used when the gene list was not provided to DEGList()
+  #topResults$labels <- gene_key$hgnc_symbol[match(rownames(topResults), gene_key$ensembl_gene_id)], topResults)
+
+  # Only the differentially expressed ones for labeling.
+  degFrame <- subset(topResults, expr != "non")
+
+  # If we want a limited set of labels, then find the indicies for those labels, and copy them onto a background of empty strings
+  # (if we use NA, geomp_text_repel complains, and it doesn't calculate the "bumps" correctly)
+  if (!is.null(labelList)) {
+    newLabels <- rep("", length(topResults$labels)) # label text strings
+    newSize <- rep(repelSize, length(topResults$labels)) # label text size
+    indices <-  which(topResults$labels %in% labelList) #indices of desired labels
+    nDEGCount = nrow(degFrame)
+    maxLabels = nDEGCount
+
+    #determine the number of labels to render.
+    if (nDEGCount > numLabels) {
+      maxLabels = numLabels
+    }
+
+    # combine top numLabels and the requested labels
+    if (maxLabels > 0) {
+      newLabels[c(1:maxLabels, indices)] <- topResults$labels[c(1:maxLabels, indices)]
+    # ... or just the requested labels
+    } else {
+      newLabels[indices] <- topResults$labels[indices]
+    }
+    newSize[indices] <- labelSize
+    topResults$labels <- newLabels
+  }
+
+
+  myPlot <- ggplot(data=topResults, aes_(x=quote(logFC), y=quote(lop))) +
+    geom_point(aes_(color=quote(expr)), size=pointSize) +
     scale_colour_manual(name="Expression",
                         breaks = c("up", "down", "non"),
                         label  = c("Up regulated", "Down regulated", "Not significant"),
-                        values = c("up"=upColor, "down"=downColor, "non"=nonColor))
-  # Add an xlimit via xlim=xlim(-5,5), on the Volcano call.
-  if (!is.null(xlim)) {
-    p <- p + xlim
+                        values = c("up"=colors[1], "down"=colors[2], "non"=colors[3]))
+
+  # grab the variable argument list from the elipsis in the function definition.
+  variableArguments <- list(...)
+
+  # Loop over it to add elements to the plot - assumes variable arguments are only to be fed to ggplot()
+  # If variableArguments is an empty list, loop doesn't happen, no error.
+  for (arg in variableArguments) {
+    myPlot <- myPlot + arg
   }
 
   if (!is.null(labelList)) {
-    p <- p + geom_text_repel(data=ttAnnot, aes(x=logFC, y=lop, fontface=repelFontFace, label=labels), size=repelSize)
-  } else if (nrow(deg) > numLabels) {
-    p <- p + geom_text_repel(data=deg[1:numLabels,], aes(x=logFC, y=lop, fontface=repelFontFace, label=deg[1:numLabels, "labels"]), size=repelSize)
-  } else if (nrow(deg) > 0) {
-    p <- p + geom_text_repel(data=deg, aes(x=logFC, y=lop, fontface=repelFontFace, label=labels), size=repelSize)
+    myPlot <- myPlot + geom_text_repel(data=topResults, aes(fontface=repelFontFace, label=labels), size=newSize)
+  } else if (nrow(degFrame) > numLabels) {
+    myPlot <- myPlot + geom_text_repel(data=degFrame[1:numLabels,], aes(fontface=repelFontFace, label=degFrame[1:numLabels, "labels"]), size=repelSize)
+  } else if (nrow(degFrame) > 0) {
+    myPlot <- myPlot + geom_text_repel(data=degFrame, aes(fontface=repelFontFace, label=labels), size=repelSize)
   }
+    # fall through - no differentially expressed genes, hence no labels.
 
-  p <- p +
-    # do this outside
-    # theme_bw() + theme(text = element_text(face=fontFace, size=14), plot.title = element_text(face=fontFace, hjust = 0.5)) +
+  myPlot <- myPlot +
+    # do this outside the function
+    # theme_set(theme_bw() + theme(text = element_text(face="bold", size=14), plot.title = element_text(face="bold", hjust = 0.5)))
     xlab(expression(log[2]~'Fold Change')) + ylab(expression(-log[10]~'p-value')) +
     ggtitle(title) +
     geom_hline(yintercept = -log10(cutPvalue), linetype = "dashed") +
     geom_vline(xintercept =  log2(cutFC),      linetype = "dashed") +
     geom_vline(xintercept = -log2(cutFC),      linetype = "dashed")
 
-  print(p)
+  print(myPlot)
 
   if (saveImage == TRUE) {
 #    if (extImage == "svg") {
@@ -139,24 +166,20 @@ Volcano <- function(fit,
     ggsave(filename=paste(target, extImage, sep="."), width=8, height=10, dpi=320)
   }
 
-  # pepare to write and/or return.
-  if (nrow(deg) > 0) {
-    deg$lop <- NULL
-    deg$B <- NULL
-    deg$labels <- NULL
-  }
-  #if (write == TRUE && nrow(deg) > 0) {
-    # Row.names should be false if the Ensembl IDs are already added as a column possibly using DEGList(gene=) argument)
- #   write.csv(deg, paste(target, "deg.csv", sep="_"), quote=F)
- # } else if (write == TRUE) {
-  if (write == TRUE) {
-    ttAnnot$lop <- NULL
-    ttAnnot$B <- NULL
-    ttAnnot$labels <- NULL
-    write.csv(ttAnnot, paste(target, "all.csv", sep="_"), quote=F)
+  # write out the top table results to a CSV file with all the results, remove redunant information
+  if (writeTopTable == TRUE) {
+    topResults$lop <- NULL
+    topResults$B <- NULL
+    topResults$labels <- NULL
+    write.csv(topResults, paste(target, "all.csv", sep="_"), quote=F)
   }
 
   # return only the differentially expressed genes.
   # invisible keeps the variable from being printed if the function call result is not assigned
-  invisible(deg)
+  # pepare to return.
+  if (nrow(degFrame) > 0) {
+    degFrame$lop <- NULL
+    degFrame$labels <- NULL
+  }
+  invisible(degFrame)
 }
