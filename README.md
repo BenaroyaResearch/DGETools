@@ -4,7 +4,7 @@ Differential Gene Expression Analysis Tools
 Currenty this includes only the Volcano function for rendering Volcano plots, and writing out dge lists from limma based
 model fits, including contrast based models.
 
-Here is a more complete example of the code leading up to a volcano plot.
+Here is a more complete example of the code leading up to a plot with the Volcano function.
 
     d <- DGEList(counts=filteredCounts, genes=filteredGenes)
     d <- calcNormFactors(d)
