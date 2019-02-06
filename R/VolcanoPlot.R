@@ -14,10 +14,10 @@
 #' Make a volcano plot, using cuts, ggrepel, optionally write out as image, optionally write out DEG list and all gene list to .csv
 #'
 #' @param fit A fitted linear model object (MArrayLM)
-#' @param target Name of the constrast target to plot (string)
+#' @param target Name of the contrast target to plot, or the corresponding column of the model matrix (string)
 #' @param title Title for the plot (string)
 #' @param writeTopTable Write gene list to CSV file (see \code{target} string, boolean)
-#' @param write deprecated in favor of \code{witeTopTable}
+#' @param write deprecated in favor of \code{writeTopTable}
 #' @param saveImage Write out an image (boolean)
 #' @param extImage Image type/extension (string)
 #' @param ext deprecated in favor of \code{extImage}
@@ -27,7 +27,7 @@
 #' @param labelList List of label names to render, only those (vector)
 #' @param labelSize Size of text in repel for labels from labelList - default is the same as the repelSize (integer)
 #' @param labelSource Name of the column for gene names (string)
-#' @param colors vector of up/right point color, down/left point color, and not significant color (string)
+#' @param colors vector of up/right point color, down/left point color, and not significant color (vector of three strings)
 #' @param repelFontFace Name of fontface for labels (string)
 #' @param repelSize Size of text repel labels (integer)
 #' @param pointSize Size of geom_points (integer)
