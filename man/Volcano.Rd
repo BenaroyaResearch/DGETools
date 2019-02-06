@@ -15,13 +15,13 @@ Volcano(fit, target, title, numLabels = 50, write = FALSE,
 \arguments{
 \item{fit}{A fitted linear model object (MArrayLM)}
 
-\item{target}{Name of the constrast target to plot (string)}
+\item{target}{Name of the contrast target to plot, or the corresponding column of the model matrix (string)}
 
 \item{title}{Title for the plot (string)}
 
 \item{numLabels}{Number of labels to print (integer)}
 
-\item{write}{deprecated in favor of \code{witeTopTable}}
+\item{write}{deprecated in favor of \code{writeTopTable}}
 
 \item{writeTopTable}{Write gene list to CSV file (see \code{target} string, boolean)}
 
@@ -41,7 +41,7 @@ Volcano(fit, target, title, numLabels = 50, write = FALSE,
 
 \item{labelSource}{Name of the column for gene names (string)}
 
-\item{colors}{vector of up/right point color, down/left point color, and not significant color (string)}
+\item{colors}{vector of up/right point color, down/left point color, and not significant color (vector of three strings)}
 
 \item{repelFontFace}{Name of fontface for labels (string)}
 
