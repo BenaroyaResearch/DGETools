@@ -13,7 +13,7 @@
 #'
 #' Make a volcano plot, using cuts, ggrepel, optionally write out as image, optionally write out DEG list and all gene list to .csv
 #'
-#' @param fit A fitted linear model object (MArrayLM)
+#' @param fit A fitted linear model object from limma/eBayes (MArrayLM), or a data frame with slots like the result of topTable
 #' @param target Name of the contrast target to plot, or the corresponding column of the model matrix (string)
 #' @param title Title for the plot (string)
 #' @param writeTopTable Write gene list to CSV file (see \code{target} string, boolean)
@@ -68,7 +68,6 @@ Volcano <- function(fit,
                     pointSize=3,
                     ...) {
 
-
   if (!missing(write)) {
     warning("argument 'write' is deprecated, please use writeTopTable instead.", call. = FALSE)
     writeTopTable <- write
@@ -85,14 +84,18 @@ Volcano <- function(fit,
   }
 
   # get all genes, sorted by p.value
-  topResults <- topTable(fit, coef=target, sort.by="P", number=Inf)
+  if (class(fit) == "MArrayLM") {
+    topResults <- topTable(fit, coef=target, sort.by="P", number=Inf)
+  } else {
+    topResults <- fit[order(fit$P.Value),] # assume it's a dataframe, sort it like we dod with topTable.
+  }
   topResults$lop <- -log10(topResults$adj.P.Val) # easier to keep in the dataframe
-  topResults$expr <- ifelse(topResults$logFC >= log2(cutFC) & topResults$adj.P.Val < cutPvalue, "up",
-                         ifelse(topResults$logFC < -log2(cutFC) & topResults$adj.P.Val < cutPvalue, "down", "non"))
+  topResults$expr <- ifelse(topResults$logFC >= log2(cutFC) &topResults$adj.P.Val < cutPvalue, "up",
+                         ifelse(topResults$logFC < -log2(cutFC) &topResults$adj.P.Val < cutPvalue, "down", "non"))
   topResults$labels <- as.character(topResults[[labelSource]])
 
   # Old way uses global variable,  used when the gene list was not provided to DEGList()
-  #topResults$labels <- gene_key$hgnc_symbol[match(rownames(topResults), gene_key$ensembl_gene_id)], topResults)
+  #topResults$labels <- gene_key$hgnc_symbol[match(rownames(topResults), gene_key$ensembl_gene_id)],topResults)
 
   # Only the differentially expressed ones for labeling.
   degFrame <- subset(topResults, expr != "non")
@@ -100,9 +103,9 @@ Volcano <- function(fit,
   # If we want a limited set of labels, then find the indicies for those labels, and copy them onto a background of empty strings
   # (if we use NA, geomp_text_repel complains, and it doesn't calculate the "bumps" correctly)
   if (!is.null(labelList)) {
-    newLabels <- rep("", length(topResults$labels)) # label text strings
-    newSize <- rep(repelSize, length(topResults$labels)) # label text size
-    indices <-  which(topResults$labels %in% labelList) #indices of desired labels
+    newLabels <- rep("", length(degFrame$labels)) # label text strings
+    newSize <- rep(repelSize, length(degFrame$labels)) # label text size
+    indices <-  which(degFrame$labels %in% labelList) #indices of desired labels
     nDEGCount = nrow(degFrame)
     maxLabels = nDEGCount
 
@@ -113,13 +116,13 @@ Volcano <- function(fit,
 
     # combine top numLabels and the requested labels
     if (maxLabels > 0) {
-      newLabels[c(1:maxLabels, indices)] <- topResults$labels[c(1:maxLabels, indices)]
+      newLabels[c(1:maxLabels, indices)] <-degFrame$labels[c(1:maxLabels, indices)]
     # ... or just the requested labels
     } else {
-      newLabels[indices] <- topResults$labels[indices]
+      newLabels[indices] <-degFrame$labels[indices]
     }
     newSize[indices] <- labelSize
-    topResults$labels <- newLabels
+    degFrame$labels <- newLabels
   }
 
 
@@ -140,7 +143,7 @@ Volcano <- function(fit,
   }
 
   if (!is.null(labelList)) {
-    myPlot <- myPlot + geom_text_repel(data=topResults, aes(fontface=repelFontFace, label=labels), size=newSize)
+    myPlot <- myPlot + geom_text_repel(data=degFrame, aes(fontface=repelFontFace, label=labels), size=newSize)
   } else if (nrow(degFrame) > numLabels) {
     myPlot <- myPlot + geom_text_repel(data=degFrame[1:numLabels,], aes(fontface=repelFontFace, label=degFrame[1:numLabels, "labels"]), size=repelSize)
   } else if (nrow(degFrame) > 0) {
@@ -166,7 +169,7 @@ Volcano <- function(fit,
     ggsave(filename=paste(target, extImage, sep="."), width=8, height=10, dpi=320)
   }
 
-  # write out the top table results to a CSV file with all the results, remove redunant information
+  # write out the top table topResults to a CSV file with all the data, remove redunant information
   if (writeTopTable == TRUE) {
     topResults$lop <- NULL
     topResults$B <- NULL

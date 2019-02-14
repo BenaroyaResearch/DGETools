@@ -13,7 +13,7 @@ Volcano(fit, target, title, numLabels = 50, write = FALSE,
   pointSize = 3, ...)
 }
 \arguments{
-\item{fit}{A fitted linear model object (MArrayLM)}
+\item{fit}{A fitted linear model object from limma/eBayes (MArrayLM), or a data frame with slots like the result of topTable}
 
 \item{target}{Name of the contrast target to plot, or the corresponding column of the model matrix (string)}
 
