@@ -66,6 +66,9 @@ Volcano <- function(fit,
                     repelFontFace = theme_get()$text$face,  # get the fontFace from the current theme by default.
                     repelSize=4,
                     pointSize=3,
+                    annLocation="bottom",
+                    leftAnnText=NULL,
+                    rightAnnText=NULL,
                     ...) {
 
   if (!missing(write)) {
@@ -92,7 +95,11 @@ Volcano <- function(fit,
   topResults$lop <- -log10(topResults$adj.P.Val) # easier to keep in the dataframe
   topResults$expr <- ifelse(topResults$logFC >= log2(cutFC) &topResults$adj.P.Val < cutPvalue, "up",
                          ifelse(topResults$logFC < -log2(cutFC) &topResults$adj.P.Val < cutPvalue, "down", "non"))
-  topResults$labels <- as.character(topResults[[labelSource]])
+  if (!is.null(labelSource)) {
+    topResults$labels <- as.character(topResults[[labelSource]])
+  } else {
+    topResults$labels <- as.character(rownames(topResults))
+  }
 
   # Old way uses global variable,  used when the gene list was not provided to DEGList()
   #topResults$labels <- gene_key$hgnc_symbol[match(rownames(topResults), gene_key$ensembl_gene_id)],topResults)
@@ -154,18 +161,33 @@ Volcano <- function(fit,
   myPlot <- myPlot +
     # do this outside the function
     # theme_set(theme_bw() + theme(text = element_text(face="bold", size=14), plot.title = element_text(face="bold", hjust = 0.5)))
-    xlab(expression(log[2]~'Fold Change')) + ylab(expression(-log[10]~'p-value')) +
+    xlab(expression(log[2]~'Fold Change')) + ylab(expression(-log[10]~'Adj. p-value')) +
     ggtitle(title) +
     geom_hline(yintercept = -log10(cutPvalue), linetype = "dashed") +
     geom_vline(xintercept =  log2(cutFC),      linetype = "dashed") +
     geom_vline(xintercept = -log2(cutFC),      linetype = "dashed")
 
+  # starts with b, for bottom, or l for lower, otherwise assume top or upper..
+  if (grepl('^[BbLl]', annLocation)) {
+    yPosition <- -Inf
+    vjust <- -1
+  } else {
+    yPosition <- Inf
+    vjust <- 1.33
+  }
+
+  if (!is.null(leftAnnText)) {
+    myPlot <- myPlot + annotate("text", -Inf, yPosition, hjust=-0.2, vjust=vjust, label=leftAnnText, style="bold")
+  }
+
+  if (!is.null(rightAnnText)) {
+    myPlot <- myPlot + annotate("text", Inf, yPosition, hjust=1.2, vjust=vjust, label=rightAnnText, style="bold")
+  }
+
   print(myPlot)
 
+  # as of ggplot2 v3.1.0, svglite is the driver used by ggsave() to render svg files.
   if (saveImage == TRUE) {
-#    if (extImage == "svg") {
-#    }
-    # ggsave grabs the last plot if not specified
     ggsave(filename=paste(target, extImage, sep="."), width=8, height=10, dpi=320)
   }
 
