@@ -5,12 +5,13 @@
 \title{Create a Volcano plot}
 \usage{
 Volcano(fit, target, title, numLabels = 50, write = FALSE,
-  writeTopTable = FALSE, saveImage = FALSE, ext = "png",
-  extImage = "png", cutFC = 1.5, cutPvalue = 0.05,
-  labelList = NULL, labelSize = 4, labelSource = "hgnc_symbol",
-  colors = c("red", "blue", "grey"),
+  writeTopTable = FALSE, saveImage = FALSE, imageWidth = 8,
+  imageHeight = 10, ext = "png", extImage = "png", cutFC = 1.5,
+  cutPvalue = 0.05, labelList = NULL, labelSize = 4,
+  labelSource = "hgnc_symbol", colors = c("red", "blue", "grey"),
   repelFontFace = theme_get()$text$face, repelSize = 4,
-  pointSize = 3, ...)
+  pointSize = 3, annLocation = "bottom", leftAnnText = NULL,
+  rightAnnText = NULL, ...)
 }
 \arguments{
 \item{fit}{A fitted linear model object from limma/eBayes (MArrayLM), or a data frame with slots like the result of topTable}
@@ -26,6 +27,10 @@ Volcano(fit, target, title, numLabels = 50, write = FALSE,
 \item{writeTopTable}{Write gene list to CSV file (see \code{target} string, boolean)}
 
 \item{saveImage}{Write out an image (boolean)}
+
+\item{imageWidth}{Width of saved image in inches (floating point)}
+
+\item{imageHeight}{Height of saved image in inches (floating point)}
 
 \item{ext}{deprecated in favor of \code{extImage}}
 
@@ -48,6 +53,12 @@ Volcano(fit, target, title, numLabels = 50, write = FALSE,
 \item{repelSize}{Size of text repel labels (integer)}
 
 \item{pointSize}{Size of geom_points (integer)}
+
+\item{annLocation}{Location of side annotations (string)}
+
+\item{leftAnnText}{Text for the left side annotation (string)}
+
+\item{rightAnnText}{Text for the right side annotation (string)}
 
 \item{...}{Additional function calls from the ggplot2 package to be added to ggplot, such as \code{xlim=xlim(-5,5)}, \code{ylim=ylim(0,9)}}
 }

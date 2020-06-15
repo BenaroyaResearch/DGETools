@@ -19,6 +19,8 @@
 #' @param writeTopTable Write gene list to CSV file (see \code{target} string, boolean)
 #' @param write deprecated in favor of \code{writeTopTable}
 #' @param saveImage Write out an image (boolean)
+#' @param imageWidth Width of saved image in inches (floating point)
+#' @param imageHeight Height of saved image in inches (floating point)
 #' @param extImage Image type/extension (string)
 #' @param ext deprecated in favor of \code{extImage}
 #' @param cutFC Fold Change cutoff for significance (floating point)
@@ -31,6 +33,9 @@
 #' @param repelFontFace Name of fontface for labels (string)
 #' @param repelSize Size of text repel labels (integer)
 #' @param pointSize Size of geom_points (integer)
+#' @param annLocation Location of side annotations (string)
+#' @param leftAnnText Text for the left side annotation (string)
+#' @param rightAnnText Text for the right side annotation (string)
 #' @param ...  Additional function calls from the ggplot2 package to be added to ggplot, such as \code{xlim=xlim(-5,5)}, \code{ylim=ylim(0,9)}
 #'
 #' @return A dataframe of differentially expressed gene information, in the form of topTable().
@@ -55,6 +60,8 @@ Volcano <- function(fit,
                     write=FALSE,
                     writeTopTable=FALSE,
                     saveImage=FALSE,
+                    imageWidth=8,
+                    imageHeight=10,
                     ext="png",
                     extImage="png",
                     cutFC = 1.5,
@@ -177,18 +184,18 @@ Volcano <- function(fit,
   }
 
   if (!is.null(leftAnnText)) {
-    myPlot <- myPlot + annotate("text", -Inf, yPosition, hjust=-0.2, vjust=vjust, label=leftAnnText, style="bold")
+    myPlot <- myPlot + annotate("text", -Inf, yPosition, hjust=-0.2, vjust=vjust, label=leftAnnText, fontface="bold")
   }
 
   if (!is.null(rightAnnText)) {
-    myPlot <- myPlot + annotate("text", Inf, yPosition, hjust=1.2, vjust=vjust, label=rightAnnText, style="bold")
+    myPlot <- myPlot + annotate("text", Inf, yPosition, hjust=1.2, vjust=vjust, label=rightAnnText, fontface="bold")
   }
 
   print(myPlot)
 
   # as of ggplot2 v3.1.0, svglite is the driver used by ggsave() to render svg files.
   if (saveImage == TRUE) {
-    ggsave(filename=paste(target, extImage, sep="."), width=8, height=10, dpi=320)
+    ggsave(filename=paste(target, extImage, sep="."), width=imageWidth, height=imageHeight, dpi=320)
   }
 
   # write out the top table topResults to a CSV file with all the data, remove redunant information
