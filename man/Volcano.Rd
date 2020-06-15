@@ -4,14 +4,32 @@
 \alias{Volcano}
 \title{Create a Volcano plot}
 \usage{
-Volcano(fit, target, title, numLabels = 50, write = FALSE,
-  writeTopTable = FALSE, saveImage = FALSE, imageWidth = 8,
-  imageHeight = 10, ext = "png", extImage = "png", cutFC = 1.5,
-  cutPvalue = 0.05, labelList = NULL, labelSize = 4,
-  labelSource = "hgnc_symbol", colors = c("red", "blue", "grey"),
-  repelFontFace = theme_get()$text$face, repelSize = 4,
-  pointSize = 3, annLocation = "bottom", leftAnnText = NULL,
-  rightAnnText = NULL, ...)
+Volcano(
+  fit,
+  target,
+  title,
+  numLabels = 50,
+  write = FALSE,
+  writeTopTable = FALSE,
+  saveImage = FALSE,
+  imageWidth = 8,
+  imageHeight = 10,
+  ext = "png",
+  extImage = "png",
+  cutFC = 1.5,
+  cutPvalue = 0.05,
+  labelList = NULL,
+  labelSize = 4,
+  labelSource = "hgnc_symbol",
+  colors = c("red", "blue", "grey"),
+  repelFontFace = theme_get()$text$face,
+  repelSize = 4,
+  pointSize = 3,
+  annLocation = "bottom",
+  leftAnnText = NULL,
+  rightAnnText = NULL,
+  ...
+)
 }
 \arguments{
 \item{fit}{A fitted linear model object from limma/eBayes (MArrayLM), or a data frame with slots like the result of topTable}
