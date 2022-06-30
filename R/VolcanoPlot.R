@@ -30,6 +30,7 @@
 #' @param labelSize Size of text in repel for labels from labelList - default is the same as the repelSize (integer)
 #' @param labelSource Name of the column for gene names (string)
 #' @param colors vector of up/right point color, down/left point color, and not significant color (vector of three strings)
+#' @param legendStrings vector of up, down, not significant (vector of strings)
 #' @param repelFontFace Name of fontface for labels (string)
 #' @param repelSize Size of text repel labels (integer)
 #' @param pointSize Size of geom_points (integer)
@@ -70,6 +71,7 @@ Volcano <- function(fit,
                     labelSize = 4,
                     labelSource="hgnc_symbol",  # mgi_symbol for mouse
                     colors=c("red", "blue", "grey"), # right, left, not significant
+                    legendStrings = c("Up regulated", "Down regulated", "Not significant"),
                     repelFontFace = theme_get()$text$face,  # get the fontFace from the current theme by default.
                     repelSize=4,
                     pointSize=3,
@@ -144,7 +146,7 @@ Volcano <- function(fit,
     geom_point(aes_(color=quote(expr)), size=pointSize) +
     scale_colour_manual(name="Expression",
                         breaks = c("up", "down", "non"),
-                        label  = c("Up regulated", "Down regulated", "Not significant"),
+                        label  = legendStrings,
                         values = c("up"=colors[1], "down"=colors[2], "non"=colors[3]))
 
   # grab the variable argument list from the elipsis in the function definition.
@@ -159,7 +161,8 @@ Volcano <- function(fit,
   if (!is.null(labelList)) {
     myPlot <- myPlot + geom_text_repel(data=degFrame, aes(fontface=repelFontFace, label=labels), size=newSize)
   } else if (nrow(degFrame) > numLabels) {
-    myPlot <- myPlot + geom_text_repel(data=degFrame[1:numLabels,], aes(fontface=repelFontFace, label=degFrame[1:numLabels, "labels"]), size=repelSize)
+    subFrame <- degFrame[1:numLabels,]
+    myPlot <- myPlot + geom_text_repel(data=subFrame, aes(fontface=repelFontFace, label=labels), size=repelSize)
   } else if (nrow(degFrame) > 0) {
     myPlot <- myPlot + geom_text_repel(data=degFrame, aes(fontface=repelFontFace, label=labels), size=repelSize)
   }

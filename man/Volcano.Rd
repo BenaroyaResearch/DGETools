@@ -22,6 +22,7 @@ Volcano(
   labelSize = 4,
   labelSource = "hgnc_symbol",
   colors = c("red", "blue", "grey"),
+  legendStrings = c("Up regulated", "Down regulated", "Not significant"),
   repelFontFace = theme_get()$text$face,
   repelSize = 4,
   pointSize = 3,
@@ -65,6 +66,8 @@ Volcano(
 \item{labelSource}{Name of the column for gene names (string)}
 
 \item{colors}{vector of up/right point color, down/left point color, and not significant color (vector of three strings)}
+
+\item{legendStrings}{vector of up, down, not significant (vector of strings)}
 
 \item{repelFontFace}{Name of fontface for labels (string)}
 
